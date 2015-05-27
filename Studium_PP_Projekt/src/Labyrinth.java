@@ -32,11 +32,11 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
+import scala.concurrent.Future;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
-import akka.actor.UntypedActorFactory;
 
 
 
@@ -450,8 +450,18 @@ private static Labyrinth makeAndSaveLabyrinth(String[] args) {
 		// Create an Akka system
 	    ActorSystem system = ActorSystem.create("LabyrinthSystem");
 	    // create the result listener
-	    final ActorRef listener = system.actorOf(Props.create(ListenerActor.class, labyrinth, labyrinth.grid.passages, labyrinth.grid.start, labyrinth.grid.end, labyrinth.solution, frame), "listenerActor");
-
+	    final ActorRef listener = system.actorOf(
+	    		Props.create(
+	    				ListenerActor.class, 
+	    				labyrinth, 
+	    				labyrinth.grid.passages, 
+	    				labyrinth.grid.start, 
+	    				labyrinth.grid.end, 
+	    				labyrinth.solution, frame
+	    				), 
+	    		"listenerActor");
+	    
+	    
 		/*long startTime = System.currentTimeMillis();		
 		labyrinth.solution = labyrinth.solve();
 		long endTime = System.currentTimeMillis();

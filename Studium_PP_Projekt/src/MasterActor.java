@@ -7,27 +7,27 @@ import akka.actor.dsl.Inbox.Get;
 
 public class MasterActor extends UntypedActor {
 
-	ArrayDeque<Point> pathSoFar = new ArrayDeque<Point>();
-	Point start;
-	Point end;
-	byte[][] passages = null;
-	final boolean[][] visited = null;
-	
+	private final ArrayDeque<Point> pathSoFar;
+	private Point start;
+	private Point end;
+	private final byte[][] passages;
+	private final boolean[][] visited;
+	private final int labyrinthWidth;
+	private final int labyrinthHeigth;
+
 	@Override
 	public void onReceive(Object message) throws Exception {
-		
 		if ( message instanceof ListenerActor ) {
 			ActorRef reporter = getSender();
 			reporter.tell(new Integer(2), getSelf());
-			
 		} else {
 			unhandled(message);
 		}
 	}
-	
+
 	public void preStart() {
 		Point current = start;
-		
+
 		while (!current.equals(end)) {
 			Point next = null;
 			visit(current);
@@ -39,8 +39,13 @@ public class MasterActor extends UntypedActor {
 				if (hasPassage(current, neighbor) && !visitedBefore(neighbor)) {
 					if (next == null) // 1st unvisited neighbor
 						next = neighbor;
-					else // 2nd or higher unvisited neighbor: Save neighbor as starting cell for a later backtracking
-						backtrackStack.push(new PointAndDirection(neighbor, directionToNeighbor.opposite));
+					else {
+						// 2nd or higher unvisited neighbor: start a new actor to continue solving
+						//backtrackStack.push(new PointAndDirection(neighbor, directionToNeighbor.opposite));
+						
+						final ActorRef newSolver = getContext().actorOf(
+								Props.create(MasterActor.class, pathSoFar, neighbor, end, passages, visited));
+					}
 				}
 			}
 			// Advance to next cell, if any:
@@ -67,16 +72,47 @@ public class MasterActor extends UntypedActor {
 		}
 		pathSoFar.addLast(current);
 	}
-	
+
+	public MasterActor(ArrayDeque<Point> pathSoFar, Point start, Point end, byte[][] passages, boolean[][] visited) {
+		this.pathSoFar = pathSoFar;
+		this.start = start;
+		this.end = end;
+		this.passages = passages;
+		this.labyrinthWidth = passages[0].length;
+		this.labyrinthHeigth = passages[1].length;
+		this.visited = visited;
+	}
+
 	private void visit(Point p) {
 		// DEBUG System.out.println("Visiting " + p);
 		visited [p.getX()][p.getY()] = true;
 	}
-	
-	public MasterActor(ArrayDeque<Point> psf, Point start, Point end, byte[][] passages) {
-		this.pathSoFar = psf;
-		this.start = start;
-		this.end = end;
-		this.passages = passages;
+
+	private boolean visitedBefore(Point p) {
+		boolean result = visited[p.getX()][p.getY()];
+		/*//DEBUG
+		if (result)
+			System.out.println("Node " + p + " already visited.");*/
+		return result;
+	}
+
+	private boolean hasPassage(Point from, Point to) {
+		if (!contains(from) ||  !contains(to)) {
+			return false;
+		}
+		if (from.getNeighbor(Direction.N).equals(to))
+			return (passages[from.getX()][from.getY()] & Direction.N.bit) != 0;
+		if (from.getNeighbor(Direction.S).equals(to))
+			return (passages[from.getX()][from.getY()] & Direction.S.bit) != 0;
+		if (from.getNeighbor(Direction.E).equals(to))
+			return (passages[from.getX()][from.getY()] & Direction.E.bit) != 0;
+		if (from.getNeighbor(Direction.W).equals(to))
+			return (passages[from.getX()][from.getY()] & Direction.W.bit) != 0;
+		return false;  // To suppress warning about undefined return value
+	}
+
+	private boolean contains(Point p) {
+		return 0 <= p.getX() && p.getX() < labyrinthWidth && 
+				0 <= p.getY() && p.getY() < labyrinthHeigth;
 	}
 }
