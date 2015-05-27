@@ -55,11 +55,11 @@ public class MasterActor extends UntypedActor {
 				current = next;
 			} else { 
 				// current has no unvisited neighbor: Backtrack, if possible
-				if (backtrackStack.isEmpty())
-					return null; // No more backtracking avaible: No solution exists
+//				if (backtrackStack.isEmpty())
+//					return null; // No more backtracking avaible: No solution exists
 
 				// Backtrack: Continue with cell saved at latest branching point:
-				PointAndDirection pd = backtrackStack.pop();
+				PointAndDirection pd = null;//backtrackStack.pop();
 				current = pd.getPoint();
 				Point branchingPoint = current.getNeighbor(pd.getDirectionToBranchingPoint());
 				// DEBUG System.out.println("Backtracking to " +  branchingPoint);
