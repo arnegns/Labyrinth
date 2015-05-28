@@ -33,10 +33,12 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
 import scala.concurrent.Future;
+import akka.actor.Actor;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
+import akka.actor.UntypedActorFactory;
 
 
 
@@ -96,8 +98,8 @@ final public class Labyrinth extends JPanel  {
 	private static final double CYCLE_CREATION_PROBABILITY = 0.01;
 	
 	// The default size of the labyrinth (i.e. unless program is invoked with size arguments):
-	private static final int DEFAULT_WIDTH_IN_CELLS = 5000;
-	private static final int DEFAULT_HEIGHT_IN_CELLS = 5000;
+	private static final int DEFAULT_WIDTH_IN_CELLS = 7;
+	private static final int DEFAULT_HEIGHT_IN_CELLS = 7;
 	
 	private final Grid grid;
 	
@@ -447,6 +449,10 @@ private static Labyrinth makeAndSaveLabyrinth(String[] args) {
 			labyrinth.print();
 		} 
 		
+		Properties prop = new Properties(new ArrayDeque<Point>(), labyrinth.grid.start, labyrinth.grid.end, labyrinth.grid.passages,
+										labyrinth.visited, labyrinth.grid.passages[0].length,
+										labyrinth.grid.passages[1].length);
+		
 		// Create an Akka system
 	    ActorSystem system = ActorSystem.create("LabyrinthSystem");
 	    // create the result listener
@@ -461,8 +467,11 @@ private static Labyrinth makeAndSaveLabyrinth(String[] args) {
 	    				), 
 	    		"listenerActor");
 	    
+	    final ActorRef master = system.actorOf(Props.create(Master.class,prop,listener));
+	    master.tell("solve",listener);
 	    
-		/*long startTime = System.currentTimeMillis();		
+	    
+		/*long startTimel = System.currentTimeMillis();		
 		labyrinth.solution = labyrinth.solve();
 		long endTime = System.currentTimeMillis();
 		System.out.println("Computed sequential solution of length " + labyrinth.solution.length + " to labyrinth of size " + 
