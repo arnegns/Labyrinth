@@ -1,49 +1,42 @@
-import java.util.ArrayDeque;
-
-import javax.swing.JFrame;
-
-import akka.actor.Actor;
 import akka.actor.ActorRef;
-import akka.actor.IndirectActorProducer;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 
-public class ListenerActor extends UntypedActor {
+public class ResultActor extends UntypedActor {
 	
 	private long startTime;
 	private long endTime;
 	
-	private final Labyrinth labyrinth;
 	private final byte[][] passages;
 	private final Point start;
 	private final Point end;
-	private Point[] solution;
+	private Point[] solution = null;
 	
-	final public JFrame frame;
-	
-	public void preStart() {
-//		final ArrayDeque<Point> pathSoFar = new ArrayDeque<Point>();
-//		//pathSoFar.push(start);
-//		final boolean[][] visited = new boolean[passages[0].length][passages[1].length];
-		startTime = System.currentTimeMillis();
-//		ActorRef master = getContext().actorOf(
-//				Props.create(MasterActorSteffen.class, pathSoFar, start, end, passages, visited, getSelf()));
-//				//master.tell(this, getSelf());
+	public ResultActor(Point start, Point end, byte[][] passages) {
+		this.passages = passages;
+		this.start = start;
+		this.end = end;
 	}
 	
-	public void onReceive(Object message) {
-		if (message instanceof Integer) {
-						
-			getContext().system().shutdown();
-		} else if (message instanceof String) {
-			System.out.println("Danke");
-		} else if(message instanceof Point[]) {
-			getContext().system().shutdown();
+	public void preStart() {
+		startTime = System.currentTimeMillis();
+		
+		ActorRef master = getContext().actorOf(Props.create(MasterActor.class, 
+				start, 
+				end, 
+				passages.clone(), 
+				new boolean[passages[0].length][passages[1].length]));
+	}
+
+	public void onReceive(Object msg) {
+		if (msg instanceof ResultMessage) {
 			endTime = System.currentTimeMillis();
 			
-			solution = (Point[]) message;
+			ResultMessage result = (ResultMessage) msg;
+			solution = result.pathSoFar.toArray(new Point[0]);
 			
 			show();
+			
 			System.out.println("Computed sequential solution of length " + solution.length + " to labyrinth of size " + 
 					passages[0].length + "x" + passages[1].length + " in " + (endTime - startTime) + "ms.");
 			
@@ -51,15 +44,17 @@ public class ListenerActor extends UntypedActor {
 //				labyrinth.displaySolution(frame);
 //			    labyrinth.printSolution();
 //			}
-
+			
 			if (checkSolution())
 				System.out.println("Solution correct :-)"); 
 			else
 				System.out.println("Solution incorrect :-(");
 			
-		}
-		else {
-			unhandled(message);			
+			getSelf().tell(new AbortMessage(), getSelf());
+		} else if(msg instanceof AbortMessage) {
+			getContext().system().shutdown();
+		} else {
+			unhandled(msg);			
 		}
 	}
 	
@@ -103,15 +98,6 @@ public class ListenerActor extends UntypedActor {
 	private boolean contains(Point p) {
 		return 0 <= p.getX() && p.getX() < passages[0].length && 
 			   0 <= p.getY() && p.getY() < passages[1].length;
-	}
-	
-	ListenerActor(Labyrinth labyrinth, byte[][] passages, Point start, Point end, Point[] solution, JFrame frame) {
-		this.labyrinth = labyrinth;
-		this.passages = passages;
-		this.start = start;
-		this.end = end;
-		this.solution = solution;
-		this.frame = frame;
 	}
 	
 	private void show() {

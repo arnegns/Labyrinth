@@ -98,8 +98,8 @@ final public class Labyrinth extends JPanel  {
 	private static final double CYCLE_CREATION_PROBABILITY = 0.01;
 	
 	// The default size of the labyrinth (i.e. unless program is invoked with size arguments):
-	private static final int DEFAULT_WIDTH_IN_CELLS = 7;
-	private static final int DEFAULT_HEIGHT_IN_CELLS = 7;
+	private static final int DEFAULT_WIDTH_IN_CELLS = 1000;
+	private static final int DEFAULT_HEIGHT_IN_CELLS = 1000;
 	
 	private final Grid grid;
 	
@@ -449,28 +449,15 @@ private static Labyrinth makeAndSaveLabyrinth(String[] args) {
 			labyrinth.print();
 		} 
 		
-		Properties prop = new Properties(new ArrayDeque<Point>(), labyrinth.grid.start, labyrinth.grid.end, labyrinth.grid.passages,
-										labyrinth.visited, labyrinth.grid.passages[0].length,
-										labyrinth.grid.passages[1].length);
-		
 		// Create an Akka system
 	    ActorSystem system = ActorSystem.create("LabyrinthSystem");
-	    // create the result listener
-	    final ActorRef listener = system.actorOf(
-	    		Props.create(
-	    				ListenerActor.class, 
-	    				labyrinth, 
-	    				labyrinth.grid.passages, 
-	    				labyrinth.grid.start, 
-	    				labyrinth.grid.end, 
-	    				labyrinth.solution, frame
-	    				), 
-	    		"listenerActor");
-	    
-	    final ActorRef master = system.actorOf(Props.create(Master.class,prop,listener));
-	    master.tell("solve",listener);
-	    
-	    
+	    // create the result actor
+	    final ActorRef result = system.actorOf(Props.create(ResultActor.class, 
+	    		labyrinth.grid.start, 
+	    		labyrinth.grid.end, 
+	    		labyrinth.grid.passages));
+	    result.tell("solve", result);
+	    	    
 		/*long startTimel = System.currentTimeMillis();		
 		labyrinth.solution = labyrinth.solve();
 		long endTime = System.currentTimeMillis();

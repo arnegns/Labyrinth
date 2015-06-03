@@ -1,47 +1,48 @@
+import java.io.Serializable;
 import java.util.ArrayDeque;
+import java.util.concurrent.CompletableFuture;
 
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 
 
-public class Master extends UntypedActor{
-
-	private final ArrayDeque<Point> pathSoFar;
-	private Point start;
-	private Point end;
+public class SolverActor extends UntypedActor {
+	
+	private final Point start;
+	private final Point end;
 	private final byte[][] passages;
 	private final boolean[][] visited;
+	private final ArrayDeque<Point> pathSoFar;
 	private final int labyrinthWidth;
 	private final int labyrinthHeigth;
-	private final ActorRef listener;
+	
+	public SolverActor(Point start, Point end, byte[][] passages, boolean[][] visited, ArrayDeque<Point> pathSoFar) {
+		this.start = start;
+		this.end = end;
+		this.passages = passages;
+		this.visited = visited;
+		this.pathSoFar = pathSoFar;
+		this.labyrinthWidth = passages[0].length;
+		this.labyrinthHeigth = passages[1].length;
+	}
+	
+	public void preStart() {		
+		solve();
+	}
 
 	@Override
-	public void onReceive(Object message) throws Exception {
-		if(message instanceof String) {
-			solve();
+	public void onReceive(Object msg) throws Exception {
+		if(msg instanceof AbortMessage) {
+			getContext().stop(getSelf());
+		} else {
+			unhandled(msg);
 		}
-		else {
-			unhandled(message);
-		}
-
 	}
-	public Master(Properties prop, ActorRef listener) {
-		pathSoFar = prop.getPathSoFar();
-		start = prop.getStart();
-		end = prop.getEnd();
-		passages = prop.getPassages();
-		visited = prop.getVisited();
-		labyrinthHeigth = prop.getLabyrinthHeigth();
-		labyrinthWidth = prop.getLabyrinthWidth();
-		this.listener = listener;				
-	}
-
-	public void solve(){
-		//show();
+	
+	public void solve() {
 		boolean isbreak = false;
 		Point current = start;
-		
 
 		while (!current.equals(end)) {
 			Point next = null;
@@ -53,33 +54,33 @@ public class Master extends UntypedActor{
 			for (Direction directionToNeighbor: dirs) {
 				Point neighbor = current.getNeighbor(directionToNeighbor);
 				if (hasPassage(current, neighbor) && !visitedBefore(neighbor)) {
-					if (next == null){ // 1st unvisited neighbor
+					if (next == null) { // 1st unvisited neighbor
 						next = neighbor;
-					}
-					else {
-						ActorRef worker = getContext().actorOf(
-								Props.create(Master.class,toProp(neighbor),listener));
-						worker.tell("solve",getSelf());
+					} else {
+						getContext().parent().tell(new CheckMessage(
+								neighbor, 
+								end, 
+								passages.clone(), 
+								pathSoFar.clone(), 
+								visited.clone()), 
+								getSelf());
 					}
 				}
 			}
 			// Advance to next cell, if any:
 			if (next != null) {
 				current = next;
-			} else { 
-
-				//System.out.println("Stop MasterActorSteffen");				
+			} else { 				
 				isbreak = true;
-				getContext().stop(getSelf());
+				getSelf().tell(new AbortMessage(), getSelf());
 				break;
 			}
 		}
-		//show();
+
 		if(!isbreak) {
 			pathSoFar.addLast(current);
-			Point[] result = pathSoFar.toArray(new Point[0]); 
-			listener.tell(result , getSelf());
-			getContext().stop(getSelf());
+			getContext().parent().tell(new ResultMessage(pathSoFar.clone()) , getSelf());
+			getSelf().tell(new AbortMessage(), getSelf());
 		}
 	}
 
@@ -115,24 +116,6 @@ public class Master extends UntypedActor{
 		return 0 <= p.getX() && p.getX() < labyrinthWidth && 
 				0 <= p.getY() && p.getY() < labyrinthHeigth;
 	}
-
-	private void show() {
-		System.out.println();
-		System.out.println("----------PreStart Actor wurde erzeugt----------");
-		System.out.println("Start: " + start);
-		System.out.println("Ende: " + end);
-		System.out.println("Länge von pathsoFar: " + pathSoFar.size());
-		int i = 1;
-		for (Point p : pathSoFar) {
-			System.out.println(i+". Element: " + p);
-			i++;
-		}
-		System.out.println("----------Show Ende----------");
-		System.out.println();
-	}
-
-	public Properties toProp(Point current) {
-		return new Properties(pathSoFar.clone(), current, end, passages.clone(), visited.clone(), labyrinthWidth, labyrinthHeigth);
-	}
-
+	
+	
 }

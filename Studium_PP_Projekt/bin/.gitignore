@@ -1,9 +1,9 @@
-/Client.class
-/Direction.class
-/Labyrinth$Grid.class
-/Labyrinth.class
-/ListenerActor.class
+/Master.class
+/Properties.class
 /MasterActor.class
-/PathActor.class
-/Point.class
-/PointAndDirection.class
+/ResultActor.class
+/CheckMessage.class
+/ResultMessage.class
+/SolverActor.class
+/SolverActor$AbortMessage.class
+/AbortMessage.class
