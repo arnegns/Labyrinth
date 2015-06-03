@@ -11,14 +11,15 @@ public class MasterActor extends UntypedActor {
 	private final Point end;
 	private final byte[][] passages;
 	private final boolean[][] visited;
-	private final ArrayDeque<Point> pathSoFar;
+	private final PathNode<Point> pathSoFar;
 	
 	public MasterActor(Point start, Point end, byte[][] passages, boolean[][] visited) {
 		this.start = start;
 		this.end = end;
 		this.passages = passages;
 		this.visited = visited;
-		pathSoFar = new ArrayDeque<Point>();
+		pathSoFar = new PathNode<Point>(this.start);
+		
 	}
 	
 	public void preStart() {		
@@ -27,7 +28,7 @@ public class MasterActor extends UntypedActor {
 				end,
 				passages.clone(), 
 				visited.clone(),
-				pathSoFar.clone()));
+				pathSoFar));
 	}
 	
 	@Override
@@ -39,7 +40,7 @@ public class MasterActor extends UntypedActor {
 					check.end,
 					passages.clone(), 
 					check.visited.clone(),
-					check.pathSoFar.clone()));
+					check.pathSoFar));
 		}
 		else if(msg instanceof ResultMessage) {
 			getContext().parent().tell(msg, getSelf());

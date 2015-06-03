@@ -1,9 +1,7 @@
-/Master.class
-/Properties.class
-/MasterActor.class
-/ResultActor.class
-/CheckMessage.class
-/ResultMessage.class
-/SolverActor.class
-/SolverActor$AbortMessage.class
 /AbortMessage.class
+/CheckMessage.class
+/Labyrinth$Grid.class
+/Labyrinth.class
+/MasterActor.class
+/PathNode.class
+/Test.class

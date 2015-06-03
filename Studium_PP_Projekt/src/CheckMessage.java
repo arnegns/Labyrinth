@@ -1,5 +1,4 @@
 import java.io.Serializable;
-import java.util.ArrayDeque;
 import java.util.Arrays;
 
 
@@ -9,10 +8,10 @@ public final class CheckMessage implements Serializable {
 	public final Point start;
 	public final Point end;
 	public final byte[][] passages;
-	public final ArrayDeque<Point> pathSoFar;
+	public final PathNode<Point> pathSoFar;
 	public final boolean[][] visited;
 	
-	public CheckMessage(Point start, Point end, byte[][] passages, ArrayDeque<Point> pathSoFar, boolean[][] visited) {
+	public CheckMessage(Point start, Point end, byte[][] passages, PathNode<Point> pathSoFar, boolean[][] visited) {
 		this.start = start;
 		this.end = end;
 		this.passages = passages;

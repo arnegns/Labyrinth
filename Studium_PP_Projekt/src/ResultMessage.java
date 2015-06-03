@@ -1,12 +1,13 @@
 import java.io.Serializable;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 
 
 public final class ResultMessage implements Serializable {
 	private static final long serialVersionUID = 1L;
-	public final ArrayDeque<Point> pathSoFar;
+	public final ArrayList<Point> pathSoFar;
 	
-	public ResultMessage(ArrayDeque<Point> pathSoFar) {
+	public ResultMessage(ArrayList<Point> pathSoFar) {
 		this.pathSoFar = pathSoFar;
 	}
 
