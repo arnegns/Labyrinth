@@ -1,3 +1,4 @@
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -20,17 +21,16 @@ public final class PathNode<T> {
     	newWay.before = this;
         return newWay;
     }
-
-	public final ArrayList<T> getPath() {
+    
+	public final ArrayDeque<T> getPath() {
     	PathNode<T> next = this;
-    	ArrayList<T> holePath = new ArrayList<T>();
+    	ArrayDeque<T> holePath = new ArrayDeque<T>();
     	
     	while(next.before != null) {
-    		holePath.add((T) next.way);
+    		holePath.addFirst((T) next.way);
     		next = next.before;
     	}
-    	holePath.add((T) next.way);
-    	Collections.reverse(holePath);
+
 		return holePath;
     }
 	

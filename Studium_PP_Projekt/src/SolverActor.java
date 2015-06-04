@@ -77,7 +77,6 @@ public class SolverActor extends UntypedActor {
 		}
 
 		if(!isbreak) {
-			//getContext().parent().tell(new ResultMessage(pathSoFar, current) , getSelf());
 			getContext().parent().tell(new ResultMessage(pathSoFar.getPath()), getSelf());
 			getSelf().tell(new AbortMessage(), getSelf());
 		}

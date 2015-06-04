@@ -5,10 +5,10 @@ import java.util.ArrayList;
 
 public final class ResultMessage implements Serializable {
 	private static final long serialVersionUID = 1L;
-	public final ArrayList<Point> pathSoFar;
+	public final ArrayDeque<Point> pathSoFar;
 	
-	public ResultMessage(ArrayList<Point> pathSoFar) {
-		this.pathSoFar = pathSoFar;
+	public ResultMessage(ArrayDeque<Point> arrayDeque) {
+		this.pathSoFar = arrayDeque;
 	}
 
 	@Override
