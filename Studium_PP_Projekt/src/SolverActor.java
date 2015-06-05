@@ -41,12 +41,12 @@ public class SolverActor extends UntypedActor {
 		boolean isbreak = false;
 		Point current = start;
 
+		PathNode<Point> newPath = new PathNode<Point>();
 		while (!current.equals(end)) {
 			Point next = null;
-			PathNode<Point> newPath = new PathNode<Point>();
 
 			visit(current);
-			newPath = pathSoFar.addWay(current);
+			pathSoFar = pathSoFar.addWay(current);
 
 			// Use first random unvisited neighbor as next cell, push others on the backtrack stack: 
 			Direction[] dirs = Direction.values();
@@ -59,8 +59,8 @@ public class SolverActor extends UntypedActor {
 						getContext().parent().tell(new CheckMessage(
 								neighbor, 
 								end, 
-								passages.clone(), 
-								newPath, 
+								passages, 
+								pathSoFar, 
 								visited.clone()), 
 								getSelf());
 					}
@@ -77,6 +77,7 @@ public class SolverActor extends UntypedActor {
 		}
 
 		if(!isbreak) {
+			pathSoFar = pathSoFar.addWay(current);
 			getContext().parent().tell(new ResultMessage(pathSoFar.getPath()), getSelf());
 			getSelf().tell(new AbortMessage(), getSelf());
 		}

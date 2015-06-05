@@ -98,8 +98,8 @@ final public class Labyrinth extends JPanel  {
 	private static final double CYCLE_CREATION_PROBABILITY = 0.01;
 	
 	// The default size of the labyrinth (i.e. unless program is invoked with size arguments):
-	private static final int DEFAULT_WIDTH_IN_CELLS = 10;
-	private static final int DEFAULT_HEIGHT_IN_CELLS = 10;
+	private static final int DEFAULT_WIDTH_IN_CELLS = 5000;
+	private static final int DEFAULT_HEIGHT_IN_CELLS = 5000;
 	
 	private final Grid grid;
 	
