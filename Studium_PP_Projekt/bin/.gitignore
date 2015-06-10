@@ -5,3 +5,17 @@
 /MasterActor.class
 /PathNode.class
 /Test.class
+/ActorSolution.class
+/Direction.class
+/LabyrinthTester.class
+/Point.class
+/PointAndDirection.class
+/ResultActor.class
+/ResultMessage.class
+/SolverActor.class
+/Strategy.class
+/Test1.class
+/Actors.class
+/SolutionSequentiell.class
+/Sequentiell.class
+/SequentiellSolution.class

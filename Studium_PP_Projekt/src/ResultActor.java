@@ -1,9 +1,12 @@
+import java.util.concurrent.CompletableFuture;
+
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
 
 public class ResultActor extends UntypedActor {
-	
 	private long startTime;
 	private long endTime;
 	
@@ -11,11 +14,13 @@ public class ResultActor extends UntypedActor {
 	private final Point start;
 	private final Point end;
 	private Point[] solution = null;
+	public static CompletableFuture<Point[]> fut;
 	
-	public ResultActor(Point start, Point end, byte[][] passages) {
+	public ResultActor(Point start, Point end, byte[][] passages, CompletableFuture<Point[]> fut) {
 		this.passages = passages;
 		this.start = start;
 		this.end = end;
+		this.fut = fut;
 	}
 	
 	public void preStart() {
@@ -24,7 +29,7 @@ public class ResultActor extends UntypedActor {
 		ActorRef master = getContext().actorOf(Props.create(MasterActor.class, 
 				start, 
 				end, 
-				passages.clone(), 
+				passages, 
 				new boolean[passages[0].length][passages[1].length]));
 	}
 
@@ -35,20 +40,22 @@ public class ResultActor extends UntypedActor {
 			ResultMessage result = (ResultMessage) msg;
 			solution = result.pathSoFar.toArray(new Point[0]);
 			
-			show();
+			fut.complete(solution);
 			
-			System.out.println("Computed sequential solution of length " + solution.length + " to labyrinth of size " + 
-					passages[0].length + "x" + passages[1].length + " in " + (endTime - startTime) + "ms.");
+//			show();
+//			
+//			System.out.println("Computed sequential solution of length " + solution.length + " to labyrinth of size " + 
+//					passages[0].length + "x" + passages[1].length + " in " + (endTime - startTime) + "ms.");
 			
 //			if (labyrinth.smallEnoughToDisplay()) {
 //				labyrinth.displaySolution(frame);
 //			    labyrinth.printSolution();
 //			}
-			
-			if (checkSolution())
-				System.out.println("Solution correct :-)"); 
-			else
-				System.out.println("Solution incorrect :-(");
+//			
+//			if (checkSolution())
+//				System.out.println("Solution correct :-)"); 
+//			else
+//				System.out.println("Solution incorrect :-(");
 			
 			getSelf().tell(new AbortMessage(), getSelf());
 		} else if(msg instanceof AbortMessage) {
@@ -105,7 +112,7 @@ public class ResultActor extends UntypedActor {
 		System.out.println("----------Zeige Ergebnis----------");
 		System.out.println("Start: " + start);
 		System.out.println("Ende: " + end);
-		System.out.println("Länge von pathsoFar: " + solution.length);
+		System.out.println("Lï¿½nge von pathsoFar: " + solution.length);
 		int i = 1;
 		for (Point p : solution) {
 			System.out.println(i+". Element: " + p);

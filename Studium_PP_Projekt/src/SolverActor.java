@@ -1,6 +1,9 @@
-
+import java.io.Serializable;
 import java.util.ArrayDeque;
+import java.util.concurrent.CompletableFuture;
 
+import akka.actor.ActorRef;
+import akka.actor.Props;
 import akka.actor.UntypedActor;
 
 
@@ -10,11 +13,11 @@ public class SolverActor extends UntypedActor {
 	private final Point end;
 	private final byte[][] passages;
 	private final boolean[][] visited;
-	private PathNode<Point> pathSoFar;
+	private final ArrayDeque<Point> pathSoFar;
 	private final int labyrinthWidth;
 	private final int labyrinthHeigth;
 	
-	public SolverActor(Point start, Point end, byte[][] passages, boolean[][] visited, PathNode<Point> pathSoFar) {
+	public SolverActor(Point start, Point end, byte[][] passages, boolean[][] visited, ArrayDeque<Point> pathSoFar) {
 		this.start = start;
 		this.end = end;
 		this.passages = passages;
@@ -41,12 +44,10 @@ public class SolverActor extends UntypedActor {
 		boolean isbreak = false;
 		Point current = start;
 
-		PathNode<Point> newPath = new PathNode<Point>();
 		while (!current.equals(end)) {
 			Point next = null;
-
 			visit(current);
-			pathSoFar = pathSoFar.addWay(current);
+			pathSoFar.addLast(current);
 
 			// Use first random unvisited neighbor as next cell, push others on the backtrack stack: 
 			Direction[] dirs = Direction.values();
@@ -59,8 +60,8 @@ public class SolverActor extends UntypedActor {
 						getContext().parent().tell(new CheckMessage(
 								neighbor, 
 								end, 
-								passages, 
-								pathSoFar, 
+								passages,
+								pathSoFar.clone(), 
 								visited.clone()), 
 								getSelf());
 					}
@@ -77,8 +78,8 @@ public class SolverActor extends UntypedActor {
 		}
 
 		if(!isbreak) {
-			pathSoFar = pathSoFar.addWay(current);
-			getContext().parent().tell(new ResultMessage(pathSoFar.getPath()), getSelf());
+			pathSoFar.addLast(current);
+			getContext().parent().tell(new ResultMessage(pathSoFar.clone()) , getSelf());
 			getSelf().tell(new AbortMessage(), getSelf());
 		}
 	}

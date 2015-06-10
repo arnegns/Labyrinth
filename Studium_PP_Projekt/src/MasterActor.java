@@ -11,24 +11,23 @@ public class MasterActor extends UntypedActor {
 	private final Point end;
 	private final byte[][] passages;
 	private final boolean[][] visited;
-	private final PathNode<Point> pathSoFar;
+	private final ArrayDeque<Point> pathSoFar;
 	
 	public MasterActor(Point start, Point end, byte[][] passages, boolean[][] visited) {
 		this.start = start;
 		this.end = end;
 		this.passages = passages;
 		this.visited = visited;
-		pathSoFar = new PathNode<Point>(this.start);
-		
+		pathSoFar = new ArrayDeque<Point>();
 	}
 	
 	public void preStart() {		
 		ActorRef solver = getContext().actorOf(Props.create(SolverActor.class, 
 				start,
 				end,
-				passages.clone(), 
+				passages, 
 				visited.clone(),
-				pathSoFar));
+				pathSoFar.clone()));
 	}
 	
 	@Override
@@ -38,8 +37,8 @@ public class MasterActor extends UntypedActor {
 			ActorRef solver = getContext().actorOf(Props.create(SolverActor.class, 
 					check.start,
 					check.end,
-					passages.clone(), 
-					check.visited.clone(),
+					passages, 
+					check.visited,
 					check.pathSoFar));
 		}
 		else if(msg instanceof ResultMessage) {
